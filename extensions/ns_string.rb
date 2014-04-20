@@ -5,6 +5,24 @@ class NSString
       stringByReplacingPercentEscapesUsingEncoding(NSUTF8StringEncoding)
   end
 
+  def download_image_from_s3(opts = {}, &block)
+    format = opts[:format] || '%s'
+
+    photo_with_dashes = self.gsub('%2F', '/')
+    base_file_name = photo_with_dashes.split('/')[-1]
+    photo = format % [base_file_name.to_s]
+    image = UIImage.from_caches_path(photo, opts[:folder])
+
+    if image.nil?
+      opts = { image_url: self, file_name: photo, folder: opts[:folder] }
+      RMExtensions::Queue.async_save_image_from_url(opts) do |img|
+        block[img]
+      end
+    else
+      block[image]
+    end
+  end
+
   def numbers
     chars_to_remove = NSCharacterSet.decimalDigitCharacterSet.invertedSet
     self.componentsSeparatedByCharactersInSet(
@@ -18,6 +36,11 @@ class NSString
     formatter.maximumFractionDigits = 0
     formatter.currencySymbol = symbol
     "#{symbol}#{formatter.stringFromNumber(self.numbers.to_i)}"
+  end
+
+  def photo_url_for_type(type)
+    return self if type.nil?
+    split(/\.jpg$/)[0] + "_#{type}.jpg"
   end
 
   def replace_in_range(range, string)
