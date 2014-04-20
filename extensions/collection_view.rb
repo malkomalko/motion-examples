@@ -40,7 +40,6 @@ module RMExtensions
 
       @collection_view = UICollectionView.alloc.initWithFrame(
         self.view.frame, collectionViewLayout:layout)
-      @collection_view.styleId = @cell_id
       @collection_view.dataSource = self
       @collection_view.delegate = self
       @collection_view.registerClass(
@@ -67,7 +66,6 @@ module RMExtensions
       cell = collection_view.dequeueReusableCellWithReuseIdentifier(
         @cell_id, forIndexPath:index_path)
       cell.model = @collection_view_data[index_path.row]
-      cell.styleClass = 'cell'
       cell
     end
 
