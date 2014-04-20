@@ -63,9 +63,13 @@ module RMExtensions
     end
 
     def collectionView(collection_view, cellForItemAtIndexPath:index_path)
+      item = @collection_view_data[index_path.row]
       cell = collection_view.dequeueReusableCellWithReuseIdentifier(
         @cell_id, forIndexPath:index_path)
-      cell.model = @collection_view_data[index_path.row]
+
+      cell.model = item if cell.respond_to?(:model=)
+      cell.on_render if cell.respond_to?(:on_render)
+
       cell
     end
 
