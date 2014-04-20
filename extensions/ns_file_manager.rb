@@ -10,10 +10,8 @@ class NSFileManager
   end
 
   def self.delete_files(opts = {})
-    caches_path = NSSearchPathForDirectoriesInDomains(
-      NSCachesDirectory, NSUserDomainMask, true)[0]
     minutes = opts[:minutes_in_seconds] || 60*60*24*7
-    base_path = opts[:path] || caches_path
+    base_path = opts[:path] || App.caches_path
 
     fm = NSFileManager.defaultManager
     enum = fm.enumeratorAtPath(base_path)

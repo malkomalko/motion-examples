@@ -1,13 +1,10 @@
 class UIImage
 
   def self.from_caches_path(photo, subfolder = nil)
-    caches_path = NSSearchPathForDirectoriesInDomains(
-      NSCachesDirectory, NSUserDomainMask, true)[0]
-
     if subfolder.nil?
-      photo_on_disk = '%s/%s' % [caches_path, photo]
+      photo_on_disk = '%s/%s' % [App.caches_path, photo]
     else
-      photo_on_disk = '%s/%s/%s' % [caches_path, subfolder, photo]
+      photo_on_disk = '%s/%s/%s' % [App.caches_path, subfolder, photo]
     end
 
     UIImage.imageWithContentsOfFile(photo_on_disk)
@@ -70,13 +67,10 @@ class UIImage
   end
 
   def save_to_caches_path(key, subfolder = nil)
-    caches_path = NSSearchPathForDirectoriesInDomains(
-      NSCachesDirectory, NSUserDomainMask, true)[0]
-
     if subfolder.nil?
-      path = "#{caches_path}/#{key}.jpg"
+      path = "#{App.caches_path}/#{key}.jpg"
     else
-      path = "#{caches_path}/#{subfolder}/#{key}.jpg"
+      path = "#{App.caches_path}/#{subfolder}/#{key}.jpg"
     end
 
     error_ptr = Pointer.new(:object)
