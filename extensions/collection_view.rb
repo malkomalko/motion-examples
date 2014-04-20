@@ -69,6 +69,7 @@ module RMExtensions
 
       cell.model = item if cell.respond_to?(:model=)
       cell.on_render if cell.respond_to?(:on_render)
+      cell.apply_bindings if cell.bindings
 
       cell
     end
