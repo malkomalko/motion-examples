@@ -93,6 +93,7 @@ module RMExtensions
 
   module CollectionViewCell
 
+    attr_accessor :model
     attr_reader :reused
 
     def prepareForReuse
