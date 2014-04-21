@@ -11,24 +11,13 @@ module RMExtensions
         @cell_class = cell_class
       end
 
-      def cell_id(cell_id)
-        @cell_id = cell_id
-      end
-
-      def cell_margin(cell_margin)
-        @cell_margin = cell_margin
-      end
-
     end
 
     def viewDidLoad
       super
 
       @cell_class = self.class.instance_variable_get(:@cell_class)
-      @cell_class ||= UICollectionViewCell
-      @cell_id = self.class.instance_variable_get(:@cell_id)
-      @cell_margin = self.class.instance_variable_get(:@cell_margin)
-      @cell_margin ||= 0
+      @cell_id = @cell_class.to_s
 
       setup_collection_view
 
@@ -40,11 +29,22 @@ module RMExtensions
 
       @collection_view = UICollectionView.alloc.initWithFrame(
         self.view.frame, collectionViewLayout:layout)
-      @collection_view.dataSource = self
-      @collection_view.delegate = self
-      @collection_view.registerClass(
-        @cell_class, forCellWithReuseIdentifier:@cell_id)
+
+      @collection_view.tap do |cv|
+        cv.registerClass(@cell_class, forCellWithReuseIdentifier:@cell_id)
+        cv.dataSource = self
+        cv.delegate = self
+        cv.allowsSelection = true
+        cv.allowsMultipleSelection = false
+      end
+
       self.view.addSubview(@collection_view)
+
+      if using_rmq && Object.const_defined?(:CollectionViewsStylesheet)
+        rmq.stylesheet = CollectionViewsStylesheet
+        style = "collection_#{@cell_class.to_s.underscore}".to_sym
+        rmq(@collection_view).apply_style(style)
+      end
 
       @collection_view_data = []
     end
@@ -64,19 +64,39 @@ module RMExtensions
 
     def collectionView(collection_view, cellForItemAtIndexPath:index_path)
       item = @collection_view_data[index_path.row]
-      cell = collection_view.dequeueReusableCellWithReuseIdentifier(
-        @cell_id, forIndexPath:index_path)
 
-      cell.model = item if cell.respond_to?(:model=)
-      cell.on_render if cell.respond_to?(:on_render)
-      cell.apply_bindings if cell.bindings
+      collection_view.dequeueReusableCellWithReuseIdentifier(
+        @cell_id, forIndexPath:index_path).tap do |cell|
 
-      cell
+        cell.model = item if cell.respond_to?(:model=)
+        cell.on_render if cell.respond_to?(:on_render)
+        cell.apply_bindings if cell.respond_to?(:bindings)
+
+        if using_rmq
+          rmq.build(cell) unless cell.reused
+        end
+      end
     end
 
-    def collectionView(collection_view, layout:layout,
-                       insetForSectionAtIndex:section)
-      UIEdgeInsetsMake(@cell_margin, @cell_margin, @cell_margin, @cell_margin)
+    def collectionView(view, didSelectItemAtIndexPath:index_path)
+      cell = view.cellForItemAtIndexPath(index_path)
+      self.on_select(cell, index_path) if self.respond_to?(:on_select)
+    end
+
+    protected
+
+    def using_rmq
+      Object.method_defined?(:rmq) && rmq.respond_to?(:stylesheet)
+    end
+
+  end
+
+  module CollectionViewCell
+
+    attr_reader :reused
+
+    def prepareForReuse
+      @reused = true
     end
 
   end
