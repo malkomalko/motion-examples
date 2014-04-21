@@ -1,17 +1,22 @@
+# Use Dish: https://github.com/lassebunk/dish
+
 module RMExtensions
   module JsonKit
 
-    def initialize(opts = {})
-      setValuesForKeysWithDictionary(opts) if opts.is_a?(Hash)
+    def self.included(base)
+      base.extend(ClassMethods)
     end
 
-    def setValue(value, forUndefinedKey:key); end
+    module ClassMethods
 
-    def to_hash
-      instance_variables.reduce({}) do |memo, iv|
-        memo[iv[1..-1].to_sym] = instance_variable_get(iv)
-        memo
+      def from_json(json)
+        if json.is_a?(Hash)
+          json = [json]
+        end
+        return [] if json.blank? || !json.is_a?(Array)
+        Dish(json, self)
       end
+
     end
 
   end
