@@ -20,12 +20,14 @@ class FooCell < UICollectionViewCell
 
   include RMExtensions::CollectionViewCell
 
-  def rmq_build
-    rmq(self).apply_style :foo_cell
+  cell_id 'foo_cell'
 
-    rmq(self.contentView).tap do |q|
+  content_view do
+    add UILabel, named: :welcome
+  end
 
-    end
+  def on_render
+    @welcome.get.text = model.text
   end
 
 end
@@ -58,6 +60,10 @@ class CollectionViewsStylesheet < ApplicationStylesheet
   def foo_cell(st)
     st.frame = @foo_cell_size
     st.background_color = color.random
+  end
+
+  def foo_cell_welcome(st)
+    ...
   end
 
 end

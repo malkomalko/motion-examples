@@ -11,6 +11,10 @@ module RMExtensions
         @cell_class = cell_class
       end
 
+      def layout(layout)
+        @layout = layout
+      end
+
     end
 
     def viewDidLoad
@@ -18,6 +22,7 @@ module RMExtensions
 
       @cell_class = self.class.instance_variable_get(:@cell_class)
       @cell_id = @cell_class.to_s
+      @layout = self.class.instance_variable_get(:@layout)
 
       setup_collection_view
 
@@ -25,10 +30,10 @@ module RMExtensions
     end
 
     def setup_collection_view
-      layout = UICollectionViewFlowLayout.alloc.init
+      layout = @layout || UICollectionViewFlowLayout
 
       @collection_view = UICollectionView.alloc.initWithFrame(
-        self.view.frame, collectionViewLayout:layout)
+        self.view.frame, collectionViewLayout:layout.alloc.init)
 
       @collection_view.tap do |cv|
         cv.registerClass(@cell_class, forCellWithReuseIdentifier:@cell_id)
@@ -63,18 +68,14 @@ module RMExtensions
     end
 
     def collectionView(collection_view, cellForItemAtIndexPath:index_path)
-      item = @collection_view_data[index_path.row]
-
       collection_view.dequeueReusableCellWithReuseIdentifier(
         @cell_id, forIndexPath:index_path).tap do |cell|
-
+        item = @collection_view_data[index_path.row]
         cell.model = item if cell.respond_to?(:model=)
-        cell.on_render if cell.respond_to?(:on_render)
-        cell.apply_bindings if cell.respond_to?(:bindings)
-
         if using_rmq
           rmq.build(cell) unless cell.reused
         end
+        cell.on_render if cell.respond_to?(:on_render)
       end
     end
 
@@ -93,8 +94,39 @@ module RMExtensions
 
   module CollectionViewCell
 
+    def self.included(base)
+      base.extend(ClassMethods)
+    end
+
+    module ClassMethods
+
+      def cell_id(cell_id)
+        @cell_id = cell_id
+      end
+
+      def content_view(&block)
+        @content_view = block
+      end
+
+    end
+
     attr_accessor :model
     attr_reader :reused
+
+    def rmq_build
+      return unless Object.method_defined?(:rmq)
+
+      @cell_id = self.class.instance_variable_get(:@cell_id)
+      @content_view = self.class.instance_variable_get(:@content_view)
+      rmq(self).apply_style @cell_id.to_sym
+      self.instance_eval(&@content_view) unless @content_view.nil?
+    end
+
+    def add(klass, opts = {})
+      style_tag = "#{@cell_id}_#{opts[:named].to_s}"
+      sub_view = rmq(self.contentView).append(klass, style_tag)
+      self.instance_variable_set("@#{opts[:named]}", sub_view)
+    end
 
     def prepareForReuse
       @reused = true
