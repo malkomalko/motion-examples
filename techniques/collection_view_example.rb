@@ -23,6 +23,7 @@ class FooCell < UICollectionViewCell
   cell_id 'foo_cell'
 
   content_view do
+    add UIImageView, named: :photo
     add UILabel, named: :welcome
   end
 
@@ -35,8 +36,8 @@ end
 class CollectionViewsStylesheet < ApplicationStylesheet
 
   def setup
-    @margin = 20
-    @foo_cell_size = {w: 200, h: 200}
+    @margin = 0
+    @foo_cell_size = {w: app_width/3, h: app_width/3}
   end
 
   def collection_view(st, cell_size)
@@ -62,8 +63,16 @@ class CollectionViewsStylesheet < ApplicationStylesheet
     st.background_color = color.random
   end
 
+  def foo_cell_photo(st)
+    st.frame = @foo_cell_size.merge({t: 0, l: 0})
+  end
+
   def foo_cell_welcome(st)
-    ...
+    st.frame = {t: 20, l: 0, w: @foo_cell_size[:w], h: 30}
+    st.color = color.random
+    st.font = font.system(18)
+    st.centered = :horizontal
+    st.text_alignment = :center
   end
 
 end
